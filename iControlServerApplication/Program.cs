@@ -30,11 +30,16 @@ namespace iControlServerApplication {
             server.CommandReceived += new TCPServer.CommandReceivedEventHandler(tcpServer_CommandReceived);
             server.Start();
 
+            trayIcon.Instance.ShowBalloonTip(5, "iControl Server Application", "Server started. Listening for clients.", ToolTipIcon.Info);
+
             Application.Run();
         }
 
         static void LoadPlugins() {
             string path = Application.StartupPath + "\\plugins";
+            if (!System.IO.Directory.Exists(path)) {
+                System.IO.Directory.CreateDirectory(path);
+            }
             string[] pluginFiles = System.IO.Directory.GetFiles(path, "*.dll");
             plugins = new IiControlPlugin[pluginFiles.Length];
 
