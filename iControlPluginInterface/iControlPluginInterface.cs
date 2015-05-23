@@ -9,6 +9,7 @@ namespace iControlPluginInterface {
         string Author { get; }
         IiControlPluginHost Host { get; set; }
 
+        bool Init();
         void Handle(string[] commands, string ip);
     }
 

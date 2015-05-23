@@ -60,8 +60,11 @@ namespace iControlServerApplication {
                 }
                 try {
                     if (icpt != null) {
-                        plugins[i] = (IiControlPlugin)Activator.CreateInstance(icpt);
-                        plugins[i].Host = pluginHost;
+                        IiControlPlugin plugin = (IiControlPlugin)Activator.CreateInstance(icpt);
+                        plugin.Host = pluginHost;
+                        if (plugin.Init() == true) {
+                            plugins[i] = plugin;
+                        }
                     }
                 } catch (Exception ex) {
                     Log(ex.Message);
