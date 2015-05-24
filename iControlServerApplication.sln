@@ -5,7 +5,7 @@ VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "iControlServerApplication", "iControlServerApplication\iControlServerApplication.csproj", "{8A99CEFA-6900-43A1-9B9A-61F14C63AA28}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "iControlPluginInterface", "iControlPluginInterface\iControlPluginInterface.csproj", "{3D9D643D-33FC-426C-AD4D-DCC56B1420ED}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "iControlInterfaces", "iControlInterfaces\iControlInterfaces.csproj", "{3D9D643D-33FC-426C-AD4D-DCC56B1420ED}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

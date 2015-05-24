@@ -6,8 +6,10 @@ using System.Threading;
 using System.Net.Sockets;
 using System.Net;
 
+using iControlInterfaces;
+
 namespace iControlServerApplication {
-    class iControlClient {
+    class iControlClient : IiControlClient  {
 
         private TcpClient _client;
         public TcpClient TCP { get { return _client; } set { _client = value; _ip = GetIP(value); } }

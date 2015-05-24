@@ -33,6 +33,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="iControlInterfaces, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\iControlInterfaces\bin\Debug\iControlInterfaces.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\Libraries\Json60r8\Bin\Net40\Newtonsoft.Json.dll</HintPath>
@@ -82,12 +86,6 @@
   <ItemGroup>
     <Content Include="Images\exit.png" />
     <Content Include="Images\tray.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\iControlPluginInterface\iControlPluginInterface.csproj">
-      <Project>{3d9d643d-33fc-426c-ad4d-dcc56b1420ed}</Project>
-      <Name>iControlPluginInterface</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

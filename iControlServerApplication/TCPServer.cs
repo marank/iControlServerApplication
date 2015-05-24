@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Net.Sockets;
+using System.Net.NetworkInformation;
 using System.Threading;
 using System.Net;
 
 namespace iControlServerApplication {
     class TCPServer {
+
+        public int Port = 31313;
 
         public delegate void CommandReceivedEventHandler(object source, CommandReceivedEventArgs e);
         public event CommandReceivedEventHandler CommandReceived;
@@ -32,14 +35,19 @@ namespace iControlServerApplication {
         private bool keepReceiving = true;
 
         public TCPServer() {
-            this.tcpListener = new TcpListener(IPAddress.Any, 31313);
+            this.tcpListener = new TcpListener(IPAddress.Any, Port);
             this.icClients = new Dictionary<String, iControlClient>();
         }
 
-        public void Start() {
-            this.listenThread = new Thread(new ThreadStart(ListenForClients));
-            this.listenThread.Start();
-            Program.Log("ListeningThread started.");
+        public Boolean Start() {
+            if (PortIsAvailable(Port)) {
+                this.listenThread = new Thread(new ThreadStart(ListenForClients));
+                this.listenThread.Start();
+                Program.Log("ListeningThread started.");
+                return true;
+            } else {
+                return false;
+            }
         }
 
         public void Stop() {
@@ -106,7 +114,6 @@ namespace iControlServerApplication {
                 if (bytesRead == 0) {
                     break;
                 }
-
                 ProcessReceivedData(icClient, ParseData(message, bytesRead));
             }
 
@@ -131,12 +138,23 @@ namespace iControlServerApplication {
 
             NetworkStream clientStream = icClient.TCP.GetStream();
             ASCIIEncoding encoder = new ASCIIEncoding();
-            byte[] buffer = encoder.GetBytes(String.Join(" ", commands) + "::ok");
-
+            byte[] buffer = encoder.GetBytes("::ok");
             clientStream.Write(buffer, 0, buffer.Length);
             clientStream.Flush();
 
+            icClient.keepConnected = false;
         }
 
+        private Boolean PortIsAvailable(int port) {
+            IPGlobalProperties ipGlobalProperties = IPGlobalProperties.GetIPGlobalProperties();
+            IPEndPoint[] endPoints = ipGlobalProperties.GetActiveTcpListeners();
+
+            foreach (IPEndPoint endPoint in endPoints) {
+                if (endPoint.Port == port) {
+                    return false;
+                }
+            }
+            return true;
+        }
     }
 }

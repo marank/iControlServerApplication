@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-using iControlPluginInterface;
+using iControlInterfaces;
 
 namespace iControlServerApplication {
     class iControlPluginHost : IiControlPluginHost {

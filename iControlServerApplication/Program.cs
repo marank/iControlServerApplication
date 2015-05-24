@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-using iControlPluginInterface;
+using iControlInterfaces;
 
 namespace iControlServerApplication {
     static class Program {
@@ -14,6 +14,24 @@ namespace iControlServerApplication {
         static TCPServer server;
         static List<IiControlPlugin> plugins;
         static iControlPluginHost pluginHost;
+        static Dictionary<string, string> settings;
+        static String ApplicationName = "iControlServerApplication";
+        static public Boolean Autostart {
+            get {
+                Microsoft.Win32.RegistryKey root = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+                return ((string)root.GetValue(ApplicationName) == Application.ExecutablePath.ToString());
+            }
+            set {
+                Microsoft.Win32.RegistryKey root = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+                if (value) {
+                    root.SetValue(ApplicationName, Application.ExecutablePath.ToString());
+                    root.Close();
+                } else {
+                    root.DeleteValue(ApplicationName);
+                    root.Close();
+                }
+            }
+        }
 
         [STAThread]
         static void Main() {
@@ -21,21 +39,23 @@ namespace iControlServerApplication {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            plugins = new List<IiControlPlugin>();
+            settings = LoadSettings();
 
             trayIcon = new TrayIcon();
             trayIcon.Display();
 
+            plugins = new List<IiControlPlugin>();
             pluginHost = new iControlPluginHost();
             LoadPlugins();
 
             server = new TCPServer();
             server.CommandReceived += new TCPServer.CommandReceivedEventHandler(tcpServer_CommandReceived);
-            server.Start();
-
-            trayIcon.Instance.ShowBalloonTip(5, "iControl Server Application", "Server started. Listening for clients.", ToolTipIcon.Info);
-
-            Application.Run();
+            if (server.Start()) {
+                trayIcon.Instance.ShowBalloonTip(5, "iControl Server Application", "Server started. " + plugins.Count + " plugins loaded.", ToolTipIcon.Info);
+                Application.Run();
+            } else {
+                MessageBox.Show("Port " + server.Port + " is already in use. Server could not be started.", ApplicationName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }      
         }
 
         static void LoadPlugins() {
@@ -46,31 +66,27 @@ namespace iControlServerApplication {
             string[] pluginFiles = System.IO.Directory.GetFiles(path, "*.dll");
 
             for (int i = 0; i < pluginFiles.Length; i++) {
-                string args = pluginFiles[i].Substring(
-                    pluginFiles[i].LastIndexOf("\\") + 1,
-                    pluginFiles[i].IndexOf(".dll") - pluginFiles[i].LastIndexOf("\\") - 1);
-
-                Type icpt = null;
-                try {
-                    System.Reflection.Assembly assembly = null;
-                    assembly = System.Reflection.Assembly.LoadFile(pluginFiles[i]);
-                    if (assembly != null) {
-                        icpt = assembly.GetType(args + ".iControlPlugin");
-                    }
-                } catch (Exception ex) {
-                    Log(ex.Message);
-                }
-                try {
-                    if (icpt != null) {
-                        IiControlPlugin plugin = (IiControlPlugin)Activator.CreateInstance(icpt);
-                        Log("Plugin loaded: " + plugin.Name + " by " + plugin.Author);
-                        plugin.Host = pluginHost;
-                        if (plugin.Init() == true) {
-                            plugins.Add(plugin);
-                        }
-                    }
-                } catch (Exception ex) {
-                    Log(ex.Message);
+                System.Reflection.Assembly assembly = System.Reflection.Assembly.LoadFrom(pluginFiles[i]);
+                foreach (Type type in assembly.GetTypes()) {
+                    if (type.IsPublic) {
+	                    if (!type.IsAbstract) {
+                            Type typeInterface = type.GetInterface(typeof(IiControlPlugin).ToString(), true);
+	 
+	                        if (typeInterface != null) {
+	                            try {
+                                    IiControlPlugin plugin = (IiControlPlugin)Activator.CreateInstance(type);
+                                    Log("Plugin loaded: " + plugin.Name + " by " + plugin.Author);
+                                    plugin.Host = pluginHost;
+                                    if (plugin.Init() == true) {
+                                        plugins.Add(plugin);
+                                    }
+	                            } catch (Exception exception) {
+	                                System.Diagnostics.Debug.WriteLine(exception);
+	                            }
+	                        }
+	                        typeInterface = null;
+	                    }
+	                }
                 }
             }
             Log("Done loading plugins. " + plugins.Count + " plugins loaded.");
@@ -81,7 +97,16 @@ namespace iControlServerApplication {
             trayIcon.Instance.ShowBalloonTip(5, "iControl Server Application", toolTipText, ToolTipIcon.Info);
 
             foreach (IiControlPlugin plugin in plugins) {
-                plugin.Handle(e.SplittedCommands, e.Client.IPAddress);
+                plugin.Handle(e.SplittedCommands, e.Client);
+            }
+        }
+
+        static Dictionary<string, string> LoadSettings() {
+            string path = System.IO.Path.Combine(Application.StartupPath, ApplicationName + ".config");
+            if (System.IO.File.Exists(path)) {
+                return Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, string>>(System.IO.File.ReadAllText(path));
+            } else {
+                return new Dictionary<string,string>();
             }
         }
 
@@ -91,6 +116,11 @@ namespace iControlServerApplication {
             trayIcon.Dispose();
             Log("iControlServerApplication stopped.");
             Application.Exit();
+        }
+
+        static public Boolean ToggleAutostart() {
+            Autostart = !Autostart;
+            return Autostart;
         }
 
         static public void Log(string msg) {
