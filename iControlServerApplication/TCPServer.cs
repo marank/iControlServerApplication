@@ -123,12 +123,11 @@ namespace iControlServerApplication {
         }
 
         private void ProcessReceivedData(iControlClient icClient, String[] commands) {
+            Program.Log("[" + icClient.IPAddress + "] >> " + String.Join(" ", commands));
 
             if (this.CommandReceived != null) {
                 CommandReceived(this, new CommandReceivedEventArgs(String.Join(" ", commands), icClient));
             }
-
-            Program.Log("[" + icClient.IPAddress + "] >> " + String.Join(" ", commands));
 
             NetworkStream clientStream = icClient.TCP.GetStream();
             ASCIIEncoding encoder = new ASCIIEncoding();

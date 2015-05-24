@@ -15,5 +15,6 @@ namespace iControlPluginInterface {
 
     public interface IiControlPluginHost {
         void Log(string msg, IiControlPlugin plugin);
+        Dictionary<string, string> DeserializeJSON(string path);
     }
 }

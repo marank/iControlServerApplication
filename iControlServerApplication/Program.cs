@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,7 +12,7 @@ namespace iControlServerApplication {
 
         static TrayIcon trayIcon;
         static TCPServer server;
-        static IiControlPlugin[] plugins;
+        static List<IiControlPlugin> plugins;
         static iControlPluginHost pluginHost;
 
         [STAThread]
@@ -19,6 +20,8 @@ namespace iControlServerApplication {
             Log("iControlServerApplication started.");
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+
+            plugins = new List<IiControlPlugin>();
 
             trayIcon = new TrayIcon();
             trayIcon.Display();
@@ -36,12 +39,11 @@ namespace iControlServerApplication {
         }
 
         static void LoadPlugins() {
-            string path = Application.StartupPath + "\\plugins";
+            string path = System.IO.Path.Combine(Application.StartupPath, "plugins");
             if (!System.IO.Directory.Exists(path)) {
                 System.IO.Directory.CreateDirectory(path);
             }
             string[] pluginFiles = System.IO.Directory.GetFiles(path, "*.dll");
-            plugins = new IiControlPlugin[pluginFiles.Length];
 
             for (int i = 0; i < pluginFiles.Length; i++) {
                 string args = pluginFiles[i].Substring(
@@ -61,17 +63,17 @@ namespace iControlServerApplication {
                 try {
                     if (icpt != null) {
                         IiControlPlugin plugin = (IiControlPlugin)Activator.CreateInstance(icpt);
+                        Log("Plugin loaded: " + plugin.Name + " by " + plugin.Author);
                         plugin.Host = pluginHost;
                         if (plugin.Init() == true) {
-                            plugins[i] = plugin;
+                            plugins.Add(plugin);
                         }
                     }
                 } catch (Exception ex) {
                     Log(ex.Message);
                 }
-
-                Log("Plugin loaded: " + plugins[i].Name + " by " + plugins[i].Author);
             }
+            Log("Done loading plugins. " + plugins.Count + " plugins loaded.");
         }
 
         static void tcpServer_CommandReceived(object source, TCPServer.CommandReceivedEventArgs e) {
@@ -92,7 +94,11 @@ namespace iControlServerApplication {
         }
 
         static public void Log(string msg) {
-            string path = AppDomain.CurrentDomain.BaseDirectory + "\\applicationlog.txt";
+            WriteLog(String.Format("[{0}] {1}", "Main", msg));
+        }
+
+        static public void WriteLog(string msg) {
+            string path = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "applicationlog.txt");
             string text = String.Format("[{0:s}] {1}", System.DateTime.Now, msg) + Environment.NewLine;
 
             System.IO.File.AppendAllText(path, text);
