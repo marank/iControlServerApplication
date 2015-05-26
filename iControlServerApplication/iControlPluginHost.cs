@@ -12,8 +12,12 @@ namespace iControlServerApplication {
             Program.WriteLog(String.Format("[{0}] {1}", plugin.Name, msg));
         }
 
-        public Dictionary<string, string> DeserializeJSON(string path) {
-            return Newtonsoft.Json.JsonConvert.DeserializeObject <Dictionary<string, string>>(System.IO.File.ReadAllText(path));
+        public Dictionary<string, object> DeserializeJSON(string path) {
+            return Newtonsoft.Json.JsonConvert.DeserializeObject <Dictionary<string, object>>(System.IO.File.ReadAllText(path));
+        }
+
+        public void SerializeJSON(string path, Dictionary<string, object> dict) {
+            System.IO.File.WriteAllText(path, Newtonsoft.Json.JsonConvert.SerializeObject(dict));
         }
     }
 }

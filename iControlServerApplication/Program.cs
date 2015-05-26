@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -59,37 +60,37 @@ namespace iControlServerApplication {
         }
 
         static void LoadPlugins() {
+            Log("Loading plugins...");
             string path = System.IO.Path.Combine(Application.StartupPath, "plugins");
             if (!System.IO.Directory.Exists(path)) {
                 System.IO.Directory.CreateDirectory(path);
             }
             string[] pluginFiles = System.IO.Directory.GetFiles(path, "*.dll");
 
-            for (int i = 0; i < pluginFiles.Length; i++) {
-                System.Reflection.Assembly assembly = System.Reflection.Assembly.LoadFrom(pluginFiles[i]);
-                foreach (Type type in assembly.GetTypes()) {
-                    if (type.IsPublic) {
-	                    if (!type.IsAbstract) {
+            foreach (string file in pluginFiles) {
+                try {
+                    Assembly assembly = Assembly.LoadFrom(file);
+                    foreach (Type type in assembly.GetTypes()) {
+                        if (type.IsClass && type.IsPublic && !type.IsAbstract) {
                             Type typeInterface = type.GetInterface(typeof(IiControlPlugin).ToString(), true);
-	 
-	                        if (typeInterface != null) {
-	                            try {
-                                    IiControlPlugin plugin = (IiControlPlugin)Activator.CreateInstance(type);
-                                    Log("Plugin loaded: " + plugin.Name + " by " + plugin.Author);
-                                    plugin.Host = pluginHost;
-                                    if (plugin.Init() == true) {
-                                        plugins.Add(plugin);
-                                    }
-	                            } catch (Exception exception) {
-	                                System.Diagnostics.Debug.WriteLine(exception);
-	                            }
-	                        }
-	                        typeInterface = null;
-	                    }
-	                }
+                            if (typeInterface != null) {
+                                IiControlPlugin plugin = (IiControlPlugin)Activator.CreateInstance(type);
+                                Log(String.Format("[{0}] Plugin loaded: {1} ({2}) by {3}", System.IO.Path.GetFileName(file), plugin.Name, plugin.Version, plugin.Author));
+                                plugin.Host = pluginHost;
+                                if (plugin.Init() == true) {
+                                    plugins.Add(plugin);
+                                } else {
+                                    Log(String.Format("[{0}] Plugin disabled", System.IO.Path.GetFileName(file)));
+                                }
+                            }
+                            typeInterface = null;
+                        }
+                    }
+                } catch (Exception ex) {
+                    Log(String.Format("[{0}] {1}: {2}", System.IO.Path.GetFileName(file), ex.ToString(), ex.Message));
                 }
             }
-            Log("Done loading plugins. " + plugins.Count + " plugins loaded.");
+            Log(plugins.Count + " plugins loaded.");
         }
 
         static void tcpServer_CommandReceived(object source, TCPServer.CommandReceivedEventArgs e) {

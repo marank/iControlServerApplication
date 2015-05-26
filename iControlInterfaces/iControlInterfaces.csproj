@@ -42,7 +42,7 @@
   <ItemGroup>
     <Compile Include="iControlClientInterface.cs" />
     <Compile Include="iControlPluginHost.cs" />
-    <Compile Include="iControlPluginInterface.cs" />
+    <Compile Include="iControlPlugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

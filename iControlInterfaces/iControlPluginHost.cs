@@ -6,6 +6,7 @@ using System.Text;
 namespace iControlInterfaces {
     public interface IiControlPluginHost {
         void Log(string msg, IiControlPlugin plugin);
-        Dictionary<string, string> DeserializeJSON(string path);
+        Dictionary<string, object> DeserializeJSON(string path);
+        void SerializeJSON(string path, Dictionary<string, object> dict);
     }
 }
