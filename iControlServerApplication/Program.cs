@@ -34,6 +34,10 @@ namespace iControlServerApplication {
             }
         }
 
+        static public List<IiControlPlugin> Plugins {
+            get { return plugins; }
+        }
+
         [STAThread]
         static void Main() {
             Log("iControlServerApplication started.");
@@ -42,12 +46,12 @@ namespace iControlServerApplication {
 
             settings = LoadSettings();
 
-            trayIcon = new TrayIcon();
-            trayIcon.Display();
-
             plugins = new List<IiControlPlugin>();
             pluginHost = new iControlPluginHost();
             LoadPlugins();
+
+            trayIcon = new TrayIcon();
+            trayIcon.Display();
 
             server = new TCPServer();
             server.CommandReceived += new TCPServer.CommandReceivedEventHandler(tcpServer_CommandReceived);
