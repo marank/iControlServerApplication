@@ -2,3 +2,7 @@ iControlInterfaces/bin/Debug
 iControlInterfaces/obj/Debug
 iControlServerApplication/bin/Debug
 iControlServerApplication/obj/Debug
+iControlInterfaces/bin/Release
+iControlInterfaces/obj/Release
+iControlServerApplication/bin/Release
+iControlServerApplication/obj/Release

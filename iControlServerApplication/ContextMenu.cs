@@ -3,13 +3,27 @@ using System.Diagnostics;
 using System.Windows.Forms;
 using System.Drawing;
 
+using iControlInterfaces;
+
 namespace iControlServerApplication {
     class iControlContextMenu {
 
         public ContextMenuStrip Create() {
             ContextMenuStrip menu = new ContextMenuStrip();
             ToolStripMenuItem item;
+            ToolStripMenuItem subitem;
             ToolStripSeparator sep;
+
+            item = new ToolStripMenuItem();
+            item.Text = "Plugins";
+
+            foreach (IiControlPlugin plugin in Program.Plugins) {
+                subitem = new ToolStripMenuItem();
+                subitem.Text = String.Format("{0} ({1})", plugin.Name, plugin.Version);
+                item.DropDownItems.Add(subitem);
+	        }
+
+            menu.Items.Add(item);
 
             item = new ToolStripMenuItem();
             item.Checked = Program.Autostart;
