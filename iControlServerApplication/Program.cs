@@ -15,8 +15,9 @@ namespace iControlServerApplication {
         static TCPServer server;
         static List<IiControlPlugin> plugins;
         static iControlPluginHost pluginHost;
-        static Dictionary<string, string> settings;
+        static Dictionary<string, string> Settings;
         static String ApplicationName = "iControlServerApplication";
+        static public String DataDir;
         static public Boolean Autostart {
             get {
                 Microsoft.Win32.RegistryKey root = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\Windows\\CurrentVersion\\Run", true);
@@ -40,11 +41,14 @@ namespace iControlServerApplication {
 
         [STAThread]
         static void Main() {
+            Microsoft.Win32.RegistryKey root = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software\\iControlServer", true);
+            DataDir = (String)root.GetValue("DataDir");
+
             Log("iControlServerApplication started.");
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            settings = LoadSettings();
+            LoadSettings();
 
             plugins = new List<IiControlPlugin>();
             pluginHost = new iControlPluginHost();
@@ -65,7 +69,9 @@ namespace iControlServerApplication {
 
         static void LoadPlugins() {
             Log("Loading plugins...");
-            string path = System.IO.Path.Combine(Application.StartupPath, "plugins");
+            
+            string path = System.IO.Path.Combine(DataDir, "plugins");
+            Log("Plugin Directory: " + path);
             if (!System.IO.Directory.Exists(path)) {
                 System.IO.Directory.CreateDirectory(path);
             }
@@ -106,12 +112,15 @@ namespace iControlServerApplication {
             }
         }
 
-        static Dictionary<string, string> LoadSettings() {
-            string path = System.IO.Path.Combine(Application.StartupPath, ApplicationName + ".config");
+        static void LoadSettings() {
+            string path = System.IO.Path.Combine(DataDir, ApplicationName + ".config");
+            Log("Trying to load settings from file: " + path);
             if (System.IO.File.Exists(path)) {
-                return Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, string>>(System.IO.File.ReadAllText(path));
+                Settings = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, string>>(System.IO.File.ReadAllText(path));
+                Log("Settings successfully loaded.");
             } else {
-                return new Dictionary<string,string>();
+                Settings = new Dictionary<string, string>();
+                Log("Failed loading settings: File does not exists. Default settings are being used.");
             }
         }
 
@@ -133,7 +142,7 @@ namespace iControlServerApplication {
         }
 
         static public void WriteLog(string msg) {
-            string path = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "applicationlog.txt");
+            string path = System.IO.Path.Combine(DataDir, "application.log");
             string text = String.Format("[{0:s}] {1}", System.DateTime.Now, msg) + Environment.NewLine;
 
             System.IO.File.AppendAllText(path, text);

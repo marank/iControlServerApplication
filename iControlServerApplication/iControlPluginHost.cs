@@ -8,6 +8,14 @@ using iControlInterfaces;
 namespace iControlServerApplication {
     class iControlPluginHost : IiControlPluginHost {
 
+        public String DataDir {
+            get { return Program.DataDir; }
+        }
+
+        public String PluginDir {
+            get { return System.IO.Path.Combine(Program.DataDir, "plugins"); }
+        }
+
         public void Log(string msg, IiControlPlugin plugin) {
             Program.WriteLog(String.Format("[{0}] {1}", plugin.Name, msg));
         }
