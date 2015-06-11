@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Net.Sockets;
-using System.Net.NetworkInformation;
-using System.Threading;
 using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
 
 namespace iControlServerApplication {
     class TCPServer {

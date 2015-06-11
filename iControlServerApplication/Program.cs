@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Reflection;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Reflection;
 using System.Windows.Forms;
 
 using iControlInterfaces;
@@ -11,13 +8,14 @@ using iControlInterfaces;
 namespace iControlServerApplication {
     static class Program {
 
-        static TrayIcon trayIcon;
         static TCPServer server;
         static List<IiControlPlugin> plugins;
         static iControlPluginHost pluginHost;
-        static Dictionary<string, object> Settings;
+        static Dictionary<string, object> settings;
         static public string ApplicationName = "iControlServerApplication";
         static public string DataDir;
+        static public iControlNotificationManager NotificationManager;
+
         static public Boolean Autostart {
             get {
                 Microsoft.Win32.RegistryKey root = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\Windows\\CurrentVersion\\Run", true);
@@ -54,17 +52,16 @@ namespace iControlServerApplication {
             pluginHost = new iControlPluginHost();
             LoadPlugins();
 
-            trayIcon = new TrayIcon();
-            trayIcon.Display();
+            NotificationManager = new iControlNotificationManager();
 
             server = new TCPServer();
             server.CommandReceived += new TCPServer.CommandReceivedEventHandler(tcpServer_CommandReceived);
             if (server.Start()) {
-                trayIcon.ShowBalloonTip(5, "iControl Server Application", "Server started. " + plugins.Count + " plugins loaded.", ToolTipIcon.Info);
+                NotificationManager.ShowNotfication("iControl Server Application", "Server started. " + plugins.Count + " plugins loaded.");
                 Application.Run();
             } else {
                 MessageBox.Show("Port " + server.Port + " is already in use. Server could not be started.", ApplicationName, MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }      
+            }
         }
 
         static void LoadPlugins() {
@@ -105,7 +102,7 @@ namespace iControlServerApplication {
 
         static void tcpServer_CommandReceived(object source, TCPServer.CommandReceivedEventArgs e) {
             string toolTipText = "[" + e.Client.IPAddress + "] >> " + e.Command;
-            trayIcon.ShowBalloonTip(5, "iControl Server Application", toolTipText, ToolTipIcon.Info);
+            NotificationManager.ShowNotfication("iControl Server Application", toolTipText);
 
             foreach (IiControlPlugin plugin in plugins) {
                 plugin.Handle(e.SplittedCommands, e.Client);
@@ -116,37 +113,36 @@ namespace iControlServerApplication {
             string path = System.IO.Path.Combine(DataDir, ApplicationName + ".config");
             Log("Trying to load settings from file: " + path);
             if (System.IO.File.Exists(path)) {
-                Settings = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(System.IO.File.ReadAllText(path));
+                settings = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(System.IO.File.ReadAllText(path));
                 Log("Settings successfully loaded.");
             } else {
-                Settings = new Dictionary<string, object>();
+                settings = new Dictionary<string, object>();
                 Log("Failed loading settings: File does not exists. Default settings are being used.");
             }
         }
 
         static public object GetSetting(string key, object value) {
-            if (Settings.ContainsKey(key)) {
-                value =  Settings[key];
+            if (settings.ContainsKey(key)) {
+                value =  settings[key];
             }
 
             return value;
         }
 
         static public void SetSetting(string key, object value) {
-            if (Settings.ContainsKey(key)) {
-                Settings[key] = value;
+            if (settings.ContainsKey(key)) {
+                settings[key] = value;
             } else {
-                Settings.Add(key, value);
+                settings.Add(key, value);
             }
 
             string path = System.IO.Path.Combine(DataDir, ApplicationName + ".config");
-            System.IO.File.WriteAllText(path, Newtonsoft.Json.JsonConvert.SerializeObject(Settings, Newtonsoft.Json.Formatting.Indented));
+            System.IO.File.WriteAllText(path, Newtonsoft.Json.JsonConvert.SerializeObject(settings, Newtonsoft.Json.Formatting.Indented));
         }
 
         static public void Exit() {
             server.Stop();
-            trayIcon.Instance.Visible = false;
-            trayIcon.Dispose();
+            NotificationManager.Shutdown();
             Log("iControlServerApplication stopped.");
             Application.Exit();
         }
