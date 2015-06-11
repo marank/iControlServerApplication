@@ -17,12 +17,25 @@ namespace iControlServerApplication {
             item = new ToolStripMenuItem();
             item.Text = "Plugins";
 
-            foreach (IiControlPlugin plugin in Program.Plugins) {
+            if (Program.Plugins.Count == 0) {
                 subitem = new ToolStripMenuItem();
-                subitem.Text = String.Format("{0} ({1})", plugin.Name, plugin.Version);
+                subitem.Text = "None";
+                subitem.Enabled = false;
                 item.DropDownItems.Add(subitem);
-	        }
+            } else {
+                foreach (IiControlPlugin plugin in Program.Plugins) {
+                    subitem = new ToolStripMenuItem();
+                    subitem.Text = String.Format("{0} ({1})", plugin.Name, plugin.Version);
+                    item.DropDownItems.Add(subitem);
+                }
+            }
 
+            menu.Items.Add(item);
+
+            item = new ToolStripMenuItem();
+            item.Checked = (Boolean)Program.GetSetting("notifications", true);
+            item.Text = "Notifications";
+            item.Click += new System.EventHandler(notifications_Click);
             menu.Items.Add(item);
 
             item = new ToolStripMenuItem();
@@ -50,6 +63,12 @@ namespace iControlServerApplication {
         void autostart_Click(object sender, EventArgs e) {
             ToolStripMenuItem item = (ToolStripMenuItem)sender;
             item.Checked = Program.ToggleAutostart();
+        }
+
+        void notifications_Click(object sender, EventArgs e) {
+            ToolStripMenuItem item = (ToolStripMenuItem)sender;
+            item.Checked = !item.Checked;
+            Program.SetSetting("notifications", item.Checked);
         }
     }
 }

@@ -15,9 +15,9 @@ namespace iControlServerApplication {
         static TCPServer server;
         static List<IiControlPlugin> plugins;
         static iControlPluginHost pluginHost;
-        static Dictionary<string, string> Settings;
-        static String ApplicationName = "iControlServerApplication";
-        static public String DataDir;
+        static Dictionary<string, object> Settings;
+        static public string ApplicationName = "iControlServerApplication";
+        static public string DataDir;
         static public Boolean Autostart {
             get {
                 Microsoft.Win32.RegistryKey root = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\Windows\\CurrentVersion\\Run", true);
@@ -42,7 +42,7 @@ namespace iControlServerApplication {
         [STAThread]
         static void Main() {
             Microsoft.Win32.RegistryKey root = Microsoft.Win32.Registry.CurrentUser.OpenSubKey("Software\\iControlServer", true);
-            DataDir = (String)root.GetValue("DataDir");
+            DataDir = (string)root.GetValue("DataDir");
 
             Log("iControlServerApplication started.");
             Application.EnableVisualStyles();
@@ -60,7 +60,7 @@ namespace iControlServerApplication {
             server = new TCPServer();
             server.CommandReceived += new TCPServer.CommandReceivedEventHandler(tcpServer_CommandReceived);
             if (server.Start()) {
-                trayIcon.Instance.ShowBalloonTip(5, "iControl Server Application", "Server started. " + plugins.Count + " plugins loaded.", ToolTipIcon.Info);
+                trayIcon.ShowBalloonTip(5, "iControl Server Application", "Server started. " + plugins.Count + " plugins loaded.", ToolTipIcon.Info);
                 Application.Run();
             } else {
                 MessageBox.Show("Port " + server.Port + " is already in use. Server could not be started.", ApplicationName, MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -105,7 +105,7 @@ namespace iControlServerApplication {
 
         static void tcpServer_CommandReceived(object source, TCPServer.CommandReceivedEventArgs e) {
             string toolTipText = "[" + e.Client.IPAddress + "] >> " + e.Command;
-            trayIcon.Instance.ShowBalloonTip(5, "iControl Server Application", toolTipText, ToolTipIcon.Info);
+            trayIcon.ShowBalloonTip(5, "iControl Server Application", toolTipText, ToolTipIcon.Info);
 
             foreach (IiControlPlugin plugin in plugins) {
                 plugin.Handle(e.SplittedCommands, e.Client);
@@ -116,12 +116,31 @@ namespace iControlServerApplication {
             string path = System.IO.Path.Combine(DataDir, ApplicationName + ".config");
             Log("Trying to load settings from file: " + path);
             if (System.IO.File.Exists(path)) {
-                Settings = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, string>>(System.IO.File.ReadAllText(path));
+                Settings = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(System.IO.File.ReadAllText(path));
                 Log("Settings successfully loaded.");
             } else {
-                Settings = new Dictionary<string, string>();
+                Settings = new Dictionary<string, object>();
                 Log("Failed loading settings: File does not exists. Default settings are being used.");
             }
+        }
+
+        static public object GetSetting(string key, object value) {
+            if (Settings.ContainsKey(key)) {
+                value =  Settings[key];
+            }
+
+            return value;
+        }
+
+        static public void SetSetting(string key, object value) {
+            if (Settings.ContainsKey(key)) {
+                Settings[key] = value;
+            } else {
+                Settings.Add(key, value);
+            }
+
+            string path = System.IO.Path.Combine(DataDir, ApplicationName + ".config");
+            System.IO.File.WriteAllText(path, Newtonsoft.Json.JsonConvert.SerializeObject(Settings, Newtonsoft.Json.Formatting.Indented));
         }
 
         static public void Exit() {

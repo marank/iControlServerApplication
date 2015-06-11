@@ -21,6 +21,12 @@ namespace iControlServerApplication {
             this.trayIcon.ContextMenuStrip = new iControlContextMenu().Create();
         }
 
+        public void ShowBalloonTip(int timeout, string tipTitle, string tiptext, ToolTipIcon icon) {
+            if ((Boolean)Program.GetSetting("notifications", true) == true) {
+                Instance.ShowBalloonTip(timeout, tipTitle, tiptext, icon);
+            }
+        }
+
         public void Dispose() {
             this.trayIcon.Dispose();
         }

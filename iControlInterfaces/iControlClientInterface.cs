@@ -9,7 +9,7 @@ namespace iControlInterfaces {
     public interface IiControlClient {
 
         TcpClient TCP { get; }
-        String IPAddress { get; }
+        string IPAddress { get; }
         
         bool keepConnected { get; set; }
 
