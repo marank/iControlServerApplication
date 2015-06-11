@@ -44,6 +44,7 @@
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Xaml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -57,6 +58,11 @@
   <ItemGroup>
     <Compile Include="ContextMenu.cs" />
     <Compile Include="iControlClient.cs" />
+    <Compile Include="iControlNotificationManager.cs" />
+    <Compile Include="iControlNotificationModel.cs" />
+    <Compile Include="iControlNotification.xaml.cs">
+      <DependentUpon>iControlNotification.xaml</DependentUpon>
+    </Compile>
     <Compile Include="iControlPluginHost.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -94,6 +100,12 @@
       <Project>{3d9d643d-33fc-426c-ad4d-dcc56b1420ed}</Project>
       <Name>iControlInterfaces</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="iControlNotification.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
